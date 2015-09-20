@@ -4,7 +4,7 @@ rem Setup environment
 call "%~dp0..\..\..\env.bat" %1 %2 %3
 
 rem Define path to project file
-set "PRJFILE=%~dp0VoxelDemo-%VCVER%.sln"
+set "PRJFILE=%~dp0STL-Viewer-%VCVER%.sln"
 
 set "VisualStudioExpressName=VCExpress"
 

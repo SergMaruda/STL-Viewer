@@ -8,6 +8,8 @@
 #include <Voxel_ColorDS.hxx>
 #include "Viewer.h"
 
+class QDialogModelProperties;
+
 class Application: public QMainWindow
 {
     Q_OBJECT
@@ -109,6 +111,7 @@ private:
     double myDisplayedYMax;
     double myDisplayedZMin;
     double myDisplayedZMax;
+    QDialogModelProperties* mp_dialog_props;
 };
 
 #endif // APPLICATION_H

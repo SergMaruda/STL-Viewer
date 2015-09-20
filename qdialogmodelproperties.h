@@ -11,6 +11,8 @@ class QDialogModelProperties : public QDialog
 public:
 	QDialogModelProperties(QWidget *parent = 0);
 	~QDialogModelProperties();
+	QTableView* GetTableView();
+
 
 private:
 	Ui::QDialogModelProperties ui;

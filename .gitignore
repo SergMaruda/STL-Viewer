@@ -1,0 +1,8 @@
+/win64/vc10/obj
+/win64/vc10/bin
+/win64/vc10/objd
+/win64/vc10/src/moc_Application.cpp
+/STL-Viewer-vc10.sdf
+/GeneratedFiles
+/*.user
+/ipch/voxeldemo-4ee3732d/*.ipch

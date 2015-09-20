@@ -49,6 +49,8 @@
 #include <StlAPI_Reader.hxx>
 #include "qdialogmodelproperties.h"
 
+#include <QStandardItemModel>
+
 
 Application::Application()
     : QMainWindow( 0 )
@@ -74,7 +76,7 @@ Application::Application()
     connect(a, SIGNAL(triggered()), this, SLOT(sphere()));
     file->addAction(a);
     // Load shape...
-    a = new QAction("Load shape...", this);
+    a = new QAction("Load shape from *.stl file...", this);
     a->setShortcut(tr("Ctrl+O"));
     connect(a, SIGNAL(triggered()), this, SLOT(choose()));
     file->addAction(a);
@@ -102,92 +104,8 @@ Application::Application()
     menuBar()->addSeparator();
 
 
-#ifdef TEST
-    QMenu * test = menuBar()->addMenu( "Test" );
-
-    a = new QAction("Test boolean", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testBoolDS()));
-    test->addAction(a);
-
-    a = new QAction("Test color", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testColorDS()));
-    test->addAction(a);
-
-    a = new QAction("Test float", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testFloatDS()));
-    test->addAction(a);
-
-    a = new QAction("Test boolean / 8", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testOctBoolDS()));
-    test->addAction(a);
-
-    a = new QAction("Test boolean / 8 / 8..", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testROctBoolDS()));
-    test->addAction(a);
-
-    test->addSeparator();
-
-    a = new QAction("Test fusion of booleans", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testFuseBoolDS()));
-    test->addAction(a);
-
-    a = new QAction("Test fusion of colors", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testFuseColorDS()));
-    test->addAction(a);
-
-    a = new QAction("Test fusion of floating-points", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testFuseFloatDS()));
-    test->addAction(a);
-
-    a = new QAction("Test cutting of booleans", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testCutBoolDS()));
-    test->addAction(a);
-
-    a = new QAction("Test cutting of booleans", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testCutColorDS()));
-    test->addAction(a);
-
-    a = new QAction("Test cutting of floating-points", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(testCutFloatDS()));
-    test->addAction(a);
-
-#endif // TEST
-
     QMenu * converter = menuBar()->addMenu( "Converter" );
 
-#ifdef TEST
-    
-    a = new QAction("Number of splits along X", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setNbX()));
-    converter->addAction(a);
-
-    a = new QAction("Number of splits along Y", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setNbY()));
-    converter->addAction(a);
-
-    a = new QAction("Number of splits along Z", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setNbZ()));
-    converter->addAction(a);
-
-    converter->addSeparator();
-
-    a = new QAction("Side of scanning", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setScanSide()));
-    converter->addAction(a);
-
-    converter->addSeparator();
-
-    a = new QAction("Volumic value of 1bit voxels", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setVolumicBoolValue()));
-    converter->addAction(a);
-    
-    a = new QAction("Volumic value of 4bit voxels", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setVolumicColorValue()));
-    converter->addAction(a);
-
-    converter->addSeparator();
-
-#endif // TEST
 
     a = new QAction("Convert to 1bit voxels", this);
     connect(a, SIGNAL(triggered()), this, SLOT(convert2bool()));
@@ -203,26 +121,10 @@ Application::Application()
     connect(a, SIGNAL(triggered()), this, SLOT(displayPoints()));
     vis->addAction(a);
 
-#ifdef TEST
-    
-    a = new QAction("Nearest points", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(displayNearestPoints()));
-    vis->addAction(a);
-
-#endif // TEST
-
     a = new QAction("Boxes", this);
     connect(a, SIGNAL(triggered()), this, SLOT(displayBoxes()));
     vis->addAction(a);
 
-#ifdef TEST
-
-    a = new QAction("Nearest boxes", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(displayNearestBoxes()));
-    vis->addAction(a);
-
-#endif // TEST
-    
     vis->addSeparator();
 
     a = new QAction("Point size", this);
@@ -242,16 +144,6 @@ Application::Application()
     a = new QAction("Color max value", this);
     connect(a, SIGNAL(triggered()), this, SLOT(setColorMaxValue()));
     vis->addAction(a);
-
-#ifdef TEST
-
-    vis->addSeparator();
-
-    a = new QAction("Use GL lists", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(setUsageOfGLlists()));
-    vis->addAction(a);
-
-#endif // TEST
 
     vis->addSeparator();
 
@@ -278,22 +170,6 @@ Application::Application()
     a = new QAction("Displayed Z max", this);
     connect(a, SIGNAL(triggered()), this, SLOT(setDisplayedZMax()));
     vis->addAction(a);
-
-
-    QMenu * demo = menuBar()->addMenu( "Demo" );
-
-    a = new QAction("Waves", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(displayWaves()));
-    demo->addAction(a);
-
-    a = new QAction("Cut", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(displayCut()));
-    demo->addAction(a);
-
-    a = new QAction("Collisions", this);
-    connect(a, SIGNAL(triggered()), this, SLOT(displayCollisions()));
-    demo->addAction(a);
-
 
     QMenu * help = menuBar()->addMenu( "Help" );
 
@@ -336,8 +212,8 @@ Application::Application()
 
     resize( 450, 600 );
 
-	QDialogModelProperties* p_dlg = new QDialogModelProperties(this);
-	p_dlg->show();
+	mp_dialog_props = new QDialogModelProperties(this);
+	mp_dialog_props->show();
 }
 
 Application::~Application()
@@ -365,110 +241,11 @@ void Application::load( const QString &fileName )
 
 	TopoDS_Compound ResultShape;
 
-
-/*	OSD_Path aFile(fileName.toStdString().c_str());
-	Standard_Boolean ReturnValue = Standard_True;
-
-	Handle(StlMesh_Mesh) aSTLMesh = RWStl::ReadFile(aFile);
-
-	BRep_Builder CompoundBuilder;
-	CompoundBuilder.MakeCompound(ResultShape);
-
-	Standard_Integer NumberDomains = aSTLMesh->NbDomains();
-	Standard_Integer iND  = 1;
-	gp_XYZ p1, p2, p3;
-	TopoDS_Vertex Vertex1, Vertex2, Vertex3;
-	TopoDS_Face AktFace;
-	TopoDS_Wire AktWire;
-	BRep_Builder B;
-	Standard_Real x1, y1, z1;
-	Standard_Real x2, y2, z2;
-	Standard_Real x3, y3, z3;
-
-	StlMesh_MeshExplorer aMExp (aSTLMesh);
-
-	// BRepBuilderAPI_MakeWire WireCollector;
-	if(false)
-		for (aMExp.InitTriangle (iND); aMExp.MoreTriangle (); aMExp.NextTriangle ())
-		{
-			++iND;
-			aMExp.TriangleVertices (x1,y1,z1,x2,y2,z2,x3,y3,z3);
-			p1.SetCoord(x1,y1,z1);
-			p2.SetCoord(x2,y2,z2);
-			p3.SetCoord(x3,y3,z3);
-
-			if ((!(p1.IsEqual(p2,0.0))) && (!(p1.IsEqual(p3,0.0))))
-			{
-				Vertex1 = BRepBuilderAPI_MakeVertex(p1);
-				Vertex2 = BRepBuilderAPI_MakeVertex(p2);
-				Vertex3 = BRepBuilderAPI_MakeVertex(p3);
-
-				AktWire = BRepBuilderAPI_MakePolygon( Vertex1, Vertex2, Vertex3, Standard_True);
-
-				if( !AktWire.IsNull())
-				{
-					AktFace = BRepBuilderAPI_MakeFace( AktWire);
-					if(!AktFace.IsNull())
-						CompoundBuilder.Add(ResultShape,AktFace);
-				}
-			}
-		}
-
-	//}
-	*/
 	TopoDS_Shape aShape = ResultShape;
 
 	StlAPI_Reader reader;
 	reader.Read(aShape, fileName.toStdString().c_str()); 	
 
-    // Read shape
-	//TopoDS_Shape S;
-	//BRep_Builder B;
-	//if (!BRepTools::Read(S, (char*) fileName.constData(), B))
-		//statusBar()->showMessage( "Loading failed", 2000 );
-
-	GProp_GProps props;
-
-	typedef std::function<void (const TopoDS_Shape& S, GProp_GProps& LProps)> TFunc;
-	std::vector<TFunc> funcs;
-
-	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::LinearProperties (S, LProps);});
-	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::SurfaceProperties (S, LProps);});
-	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::VolumeProperties (S, LProps);});
-
-	for(size_t i = 0; i < 3; ++i)
-	{
-		funcs[i](aShape, props);
-
-		auto vol = props.Mass();
-
-
-		QString my_formatted_string = QString("Volume: %1").arg(vol);
-		QMessageBox::information(nullptr, "info", my_formatted_string);
-
-
-		auto mass = props.CentreOfMass();
-
-	
-		my_formatted_string = QString("Center of mass: (%1,%2,%3)").arg(mass.X()).arg(mass.Y()).arg(mass.Z());
-		QMessageBox::information(nullptr, "info", my_formatted_string);
-		Bnd_Box Bbox;
-
-		BRepBndLib::Add(aShape, Bbox);
-
-		auto bmin = Bbox.CornerMin();
-		QString bbox_min_str = QString("BBox min: (%1,%2,%3)").arg(bmin.X()).arg(bmin.Y()).arg(bmin.Z());
-		QMessageBox::information(nullptr, "info", bbox_min_str);
-
-		auto bmax = Bbox.CornerMax();
-		QString bbox_max_str = QString("BBox max: (%1,%2,%3)").arg(bmax.X()).arg(bmax.Y()).arg(bmax.Z());
-		QMessageBox::information(nullptr, "info", bbox_max_str);
-
-
-	}
-
-
-	
 	load(aShape);
 }
 
@@ -2060,6 +1837,82 @@ void Application::load(const TopoDS_Shape& S)
     else
 	    myViewer->getIC()->Display(myShape, false);
 	myViewer->getView()->FitAll();
+
+	GProp_GProps props;
+
+	typedef std::function<void (const TopoDS_Shape& S, GProp_GProps& LProps)> TFunc;
+	std::vector<TFunc> funcs;
+
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::LinearProperties (S, LProps);});
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::SurfaceProperties (S, LProps);});
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::VolumeProperties (S, LProps);});
+
+	QStandardItemModel* p_model = new 	QStandardItemModel(0, 2, this);
+	QStringList columns;
+	columns.append("Property");
+	columns.append("Value");
+	p_model->setHorizontalHeaderLabels(columns);
+
+	QString props_names[3] = 
+	{
+		"The sum of the lengths of the edges: ",
+		"Surface square: ",
+		"Model volume: "
+	};
+
+	QString units[3] = 
+	{
+		"mm",
+		"mm^2",
+		"mm^3"
+	};
+
+
+	for(size_t i = 0; i < 3; ++i)
+	{
+		funcs[i](S, props);
+
+		auto vol = props.Mass();
+
+		QList<QStandardItem *> rowData;
+		rowData << new QStandardItem(props_names[i]);
+		rowData << new QStandardItem(QString("%1 %2").arg(vol).arg(units[i]));
+		p_model->appendRow(rowData);
+	}
+
+	Bnd_Box Bbox;
+
+	BRepBndLib::Add(S, Bbox);
+
+	{
+		auto bmin = Bbox.CornerMin();
+		QString bbox_min_str = QString("(%1,%2,%3)").arg(bmin.X()).arg(bmin.Y()).arg(bmin.Z());
+		QList<QStandardItem *> rowData;
+		rowData << new QStandardItem("Bounding box min");
+		rowData << new QStandardItem(bbox_min_str);
+		p_model->appendRow(rowData);
+	}
+
+	{
+		auto bmax = Bbox.CornerMax();
+		QString bbox_max_str = QString("(%1,%2,%3)").arg(bmax.X()).arg(bmax.Y()).arg(bmax.Z());
+		QList<QStandardItem *> rowData;
+		rowData << new QStandardItem("Bounding box min");
+		rowData << new QStandardItem(bbox_max_str );
+		p_model->appendRow(rowData);
+	}
+
+	{
+		auto mass = props.CentreOfMass();
+
+		QList<QStandardItem *> rowData;
+		rowData << new QStandardItem("Model mass center");
+		rowData << new QStandardItem(QString("(%1, %2, %3)").arg(mass.X()).arg(mass.Y()).arg(mass.Z()));
+		p_model->appendRow(rowData);
+	}
+
+	mp_dialog_props->GetTableView()->setModel(p_model);
+	mp_dialog_props->GetTableView()->resizeColumnsToContents();
 }
 
 void Application::displayCut()
