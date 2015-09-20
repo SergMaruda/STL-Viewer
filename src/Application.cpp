@@ -34,8 +34,21 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <Aspect_ColorScale.hxx>
-
+#include <RWstl.hxx>
+#include <StlMesh_Mesh.hxx>
+#include <StlMesh_MeshExplorer.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
+#include <GProp_PrincipalProps.hxx>
 #include <Windows.h>
+#include <functional>
+
+#include <StlAPI_Reader.hxx>
+#include "qdialogmodelproperties.h"
+
 
 Application::Application()
     : QMainWindow( 0 )
@@ -322,6 +335,9 @@ Application::Application()
 	VoxelClient_VisDrawer::Init(myViewer->getGraphicDriver());
 
     resize( 450, 600 );
+
+	QDialogModelProperties* p_dlg = new QDialogModelProperties(this);
+	p_dlg->show();
 }
 
 Application::~Application()
@@ -334,7 +350,7 @@ Application::~Application()
 
 void Application::choose()
 {
-    QString fn = QFileDialog::getOpenFileName( this, QString::null, QString::null, "*.brep");
+    QString fn = QFileDialog::getOpenFileName( this, QString::null, QString::null, "*.stl");
     if ( !fn.isEmpty() )
 		load( fn );
     else
@@ -347,13 +363,113 @@ void Application::load( const QString &fileName )
     if ( !f.open( QIODevice::ReadOnly ) )
 		return;
 
-    // Read shape
-	TopoDS_Shape S;
+	TopoDS_Compound ResultShape;
+
+
+/*	OSD_Path aFile(fileName.toStdString().c_str());
+	Standard_Boolean ReturnValue = Standard_True;
+
+	Handle(StlMesh_Mesh) aSTLMesh = RWStl::ReadFile(aFile);
+
+	BRep_Builder CompoundBuilder;
+	CompoundBuilder.MakeCompound(ResultShape);
+
+	Standard_Integer NumberDomains = aSTLMesh->NbDomains();
+	Standard_Integer iND  = 1;
+	gp_XYZ p1, p2, p3;
+	TopoDS_Vertex Vertex1, Vertex2, Vertex3;
+	TopoDS_Face AktFace;
+	TopoDS_Wire AktWire;
 	BRep_Builder B;
-	if (!BRepTools::Read(S, (char*) fileName.constData(), B))
-		statusBar()->showMessage( "Loading failed", 2000 );
-    
-    load(S);
+	Standard_Real x1, y1, z1;
+	Standard_Real x2, y2, z2;
+	Standard_Real x3, y3, z3;
+
+	StlMesh_MeshExplorer aMExp (aSTLMesh);
+
+	// BRepBuilderAPI_MakeWire WireCollector;
+	if(false)
+		for (aMExp.InitTriangle (iND); aMExp.MoreTriangle (); aMExp.NextTriangle ())
+		{
+			++iND;
+			aMExp.TriangleVertices (x1,y1,z1,x2,y2,z2,x3,y3,z3);
+			p1.SetCoord(x1,y1,z1);
+			p2.SetCoord(x2,y2,z2);
+			p3.SetCoord(x3,y3,z3);
+
+			if ((!(p1.IsEqual(p2,0.0))) && (!(p1.IsEqual(p3,0.0))))
+			{
+				Vertex1 = BRepBuilderAPI_MakeVertex(p1);
+				Vertex2 = BRepBuilderAPI_MakeVertex(p2);
+				Vertex3 = BRepBuilderAPI_MakeVertex(p3);
+
+				AktWire = BRepBuilderAPI_MakePolygon( Vertex1, Vertex2, Vertex3, Standard_True);
+
+				if( !AktWire.IsNull())
+				{
+					AktFace = BRepBuilderAPI_MakeFace( AktWire);
+					if(!AktFace.IsNull())
+						CompoundBuilder.Add(ResultShape,AktFace);
+				}
+			}
+		}
+
+	//}
+	*/
+	TopoDS_Shape aShape = ResultShape;
+
+	StlAPI_Reader reader;
+	reader.Read(aShape, fileName.toStdString().c_str()); 	
+
+    // Read shape
+	//TopoDS_Shape S;
+	//BRep_Builder B;
+	//if (!BRepTools::Read(S, (char*) fileName.constData(), B))
+		//statusBar()->showMessage( "Loading failed", 2000 );
+
+	GProp_GProps props;
+
+	typedef std::function<void (const TopoDS_Shape& S, GProp_GProps& LProps)> TFunc;
+	std::vector<TFunc> funcs;
+
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::LinearProperties (S, LProps);});
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::SurfaceProperties (S, LProps);});
+	funcs.push_back([](const TopoDS_Shape& S, GProp_GProps& LProps){BRepGProp::VolumeProperties (S, LProps);});
+
+	for(size_t i = 0; i < 3; ++i)
+	{
+		funcs[i](aShape, props);
+
+		auto vol = props.Mass();
+
+
+		QString my_formatted_string = QString("Volume: %1").arg(vol);
+		QMessageBox::information(nullptr, "info", my_formatted_string);
+
+
+		auto mass = props.CentreOfMass();
+
+	
+		my_formatted_string = QString("Center of mass: (%1,%2,%3)").arg(mass.X()).arg(mass.Y()).arg(mass.Z());
+		QMessageBox::information(nullptr, "info", my_formatted_string);
+		Bnd_Box Bbox;
+
+		BRepBndLib::Add(aShape, Bbox);
+
+		auto bmin = Bbox.CornerMin();
+		QString bbox_min_str = QString("BBox min: (%1,%2,%3)").arg(bmin.X()).arg(bmin.Y()).arg(bmin.Z());
+		QMessageBox::information(nullptr, "info", bbox_min_str);
+
+		auto bmax = Bbox.CornerMax();
+		QString bbox_max_str = QString("BBox max: (%1,%2,%3)").arg(bmax.X()).arg(bmax.Y()).arg(bmax.Z());
+		QMessageBox::information(nullptr, "info", bbox_max_str);
+
+
+	}
+
+
+	
+	load(aShape);
 }
 
 void Application::open()
@@ -487,7 +603,7 @@ void Application::closeEvent( QCloseEvent* ce )
 
 void Application::about()
 {
-    QMessageBox::about( this, "Voxel demo-application",
+    QMessageBox::about( this, "STL Viewer",
 			"This example demonstrates simple usage of "
 			"voxel models of Open CASCADE.");
 }
@@ -1294,7 +1410,7 @@ void Application::convert(const int ivoxel)
 		S = myShape->Shape();
     if (S.IsNull())
 	{
-		QMessageBox::warning( this, "Voxel demo-application", "No shape for conversion!");
+		QMessageBox::warning( this, "STL Viewer", "No shape for conversion!");
 		return;
 	}
 
@@ -1336,7 +1452,7 @@ void Application::convert(const int ivoxel)
             Voxel_Converter converter(S, *myBoolVoxels, myNbX, myNbY, myNbZ);
 	        if (!converter.Convert(progress, myVolumicBoolValue, myScanSide))
 	        {
-		        QMessageBox::warning( this, "Voxel demo-application", "Conversion failed...");
+		        QMessageBox::warning( this, "STL Viewer", "Conversion failed...");
 		        return;
 	        }
             */
@@ -1407,7 +1523,7 @@ void Application::convert(const int ivoxel)
             Voxel_Converter converter(S, *myColorVoxels, myNbX, myNbY, myNbZ);
 	        if (!converter.Convert(progress, myVolumicColorValue, myScanSide))
 	        {
-		        QMessageBox::warning( this, "Voxel demo-application", "Conversion failed...");
+		        QMessageBox::warning( this, "STL Viewer", "Conversion failed...");
 		        return;
 	        }
             */
@@ -1547,7 +1663,7 @@ void Application::setNbX()
 {
 	bool ok;
 	myNbX = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Number of splits in X-direction:", myNbX,
+		QInputDialog::getInteger(this, "STL Viewer", "Number of splits in X-direction:", myNbX,
 														 1, 100000, 1, &ok);
 }
 
@@ -1555,7 +1671,7 @@ void Application::setNbY()
 {
 	bool ok;
 	myNbY = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Number of splits in X-direction:", myNbY,
+		QInputDialog::getInteger(this, "STL Viewer", "Number of splits in X-direction:", myNbY,
 														 1, 100000, 1, &ok);
 }
 
@@ -1563,7 +1679,7 @@ void Application::setNbZ()
 {
 	bool ok;
 	myNbZ = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Number of splits in X-direction:", myNbZ,
+		QInputDialog::getInteger(this, "STL Viewer", "Number of splits in X-direction:", myNbZ,
 														 1, 100000, 1, &ok);
 }
 
@@ -1571,7 +1687,7 @@ void Application::setColorMinValue()
 {
 	bool ok;
 	myColorMinValue = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Minimum value for color [0 .. 15]:", myColorMinValue,
+		QInputDialog::getInteger(this, "STL Viewer", "Minimum value for color [0 .. 15]:", myColorMinValue,
 								 0, 15, 1, &ok);
     if (!myVoxels.IsNull())
         myVoxels->SetColorRange(myColorMinValue, myColorMaxValue);
@@ -1581,7 +1697,7 @@ void Application::setColorMaxValue()
 {
 	bool ok;
 	myColorMaxValue = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Maximum value for color [0 .. 15]:", myColorMaxValue,
+		QInputDialog::getInteger(this, "STL Viewer", "Maximum value for color [0 .. 15]:", myColorMaxValue,
 								 0, 15, 1, &ok);
     if (!myVoxels.IsNull())
         myVoxels->SetColorRange(myColorMinValue, myColorMaxValue);
@@ -1589,14 +1705,14 @@ void Application::setColorMaxValue()
 
 void Application::setUsageOfGLlists()
 {
-    int res = QMessageBox::question( this, "Voxel demo-application", "Press Yes to use GL lists and No not to use them.", QMessageBox::Yes, QMessageBox::No);
+    int res = QMessageBox::question( this, "STL Viewer", "Press Yes to use GL lists and No not to use them.", QMessageBox::Yes, QMessageBox::No);
     if (!myVoxels.IsNull())
         myVoxels->SetUsageOfGLlists(res == QMessageBox::Yes);
 }
 
 void Application::setDisplayedXMin()
 {
-	myDisplayedXMin = QInputDialog::getDouble(this, "Voxel demo-application", "Minimum X value:", myDisplayedXMin);
+	myDisplayedXMin = QInputDialog::getDouble(this, "STL Viewer", "Minimum X value:", myDisplayedXMin);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1607,7 +1723,7 @@ void Application::setDisplayedXMin()
 
 void Application::setDisplayedXMax()
 {
-	myDisplayedXMax = QInputDialog::getDouble(this, "Voxel demo-application", "Maximum X value:", myDisplayedXMax);
+	myDisplayedXMax = QInputDialog::getDouble(this, "STL Viewer", "Maximum X value:", myDisplayedXMax);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1618,7 +1734,7 @@ void Application::setDisplayedXMax()
 
 void Application::setDisplayedYMin()
 {
-	myDisplayedYMin = QInputDialog::getDouble(this, "Voxel demo-application", "Minimum Y value:", myDisplayedYMin);
+	myDisplayedYMin = QInputDialog::getDouble(this, "STL Viewer", "Minimum Y value:", myDisplayedYMin);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1629,7 +1745,7 @@ void Application::setDisplayedYMin()
 
 void Application::setDisplayedYMax()
 {
-	myDisplayedYMax = QInputDialog::getDouble(this, "Voxel demo-application", "Maximum Y value:", myDisplayedYMax);
+	myDisplayedYMax = QInputDialog::getDouble(this, "STL Viewer", "Maximum Y value:", myDisplayedYMax);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1640,7 +1756,7 @@ void Application::setDisplayedYMax()
 
 void Application::setDisplayedZMin()
 {
-	myDisplayedZMin = QInputDialog::getDouble(this, "Voxel demo-application", "Minimum Z value:", myDisplayedZMin);
+	myDisplayedZMin = QInputDialog::getDouble(this, "STL Viewer", "Minimum Z value:", myDisplayedZMin);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1651,7 +1767,7 @@ void Application::setDisplayedZMin()
 
 void Application::setDisplayedZMax()
 {
-	myDisplayedZMax = QInputDialog::getDouble(this, "Voxel demo-application", "Maximum Z value:", myDisplayedZMax);
+	myDisplayedZMax = QInputDialog::getDouble(this, "STL Viewer", "Maximum Z value:", myDisplayedZMax);
     if (!myVoxels.IsNull())
     {
         myVoxels->SetSizeRange(myDisplayedXMin, myDisplayedXMax,
@@ -1663,28 +1779,28 @@ void Application::setDisplayedZMax()
 void Application::setScanSide()
 {
 	myScanSide = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Side of scanning (1: +X side, 2: +Y side, 3: +Z side, 4: +X & +Y sides, .. 7: +X, +Y,& +Z sides):", 
+		QInputDialog::getInteger(this, "STL Viewer", "Side of scanning (1: +X side, 2: +Y side, 3: +Z side, 4: +X & +Y sides, .. 7: +X, +Y,& +Z sides):", 
                                  myScanSide, 1, 7, 1);
 }
 
 void Application::setVolumicBoolValue()
 {
 	myVolumicBoolValue = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Volumic value on voxelization [0 .. 1]:", 
+		QInputDialog::getInteger(this, "STL Viewer", "Volumic value on voxelization [0 .. 1]:", 
                                  myVolumicBoolValue, 0, 1, 1);
 }
 
 void Application::setVolumicColorValue()
 {
 	myVolumicColorValue = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Volumic value on voxelization [0 .. 15]:", 
+		QInputDialog::getInteger(this, "STL Viewer", "Volumic value on voxelization [0 .. 15]:", 
                                  myVolumicColorValue, 0, 15, 1);
 }
 
 void Application::setQuadrangleSize()
 {
 	myQuadrangleSize = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Size of quadrangles (0% .. 100%):", 
+		QInputDialog::getInteger(this, "STL Viewer", "Size of quadrangles (0% .. 100%):", 
                                  myQuadrangleSize, 1, 100, 10);
     if (!myVoxels.IsNull())
     {
@@ -1695,7 +1811,7 @@ void Application::setQuadrangleSize()
 void Application::setPointSize()
 {
 	myPointSize = 
-		QInputDialog::getInteger(this, "Voxel demo-application", "Size of points (1 .. 10):", 
+		QInputDialog::getInteger(this, "STL Viewer", "Size of points (1 .. 10):", 
                                  myPointSize, 1, 10, 1);
     if (!myVoxels.IsNull())
     {
@@ -1707,7 +1823,7 @@ void Application::display(Voxel_VoxelDisplayMode mode)
 {
     if (myVoxels.IsNull() || !myViewer->getIC()->IsDisplayed(myVoxels))
     {
-		QMessageBox::warning( this, "Voxel demo-application", "Voxels are not displayed");
+		QMessageBox::warning( this, "STL Viewer", "Voxels are not displayed");
 		return;
 	}
 
@@ -1770,7 +1886,7 @@ void Application::displayWaves()
 
     int nbx = 500, nby = 50, nbz = 50;
     double xlen = 100.0, ylen = 100.0, zlen = 20.0;
-    double dx = xlen / (double) nbx, dy = ylen / (double) nby, dz = zlen / (double) nbz;
+   // double dx = xlen / (double) nbx, dy = ylen / (double) nby, dz = zlen / (double) nbz;
     myColorVoxels = new Voxel_ColorDS(0.0, 0.0, 0.0, xlen, ylen, zlen, nbx, nby, nbz);
 
     // Initial state - no colors

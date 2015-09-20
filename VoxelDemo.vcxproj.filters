@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\voxeldemo\src\Application.cpp" />
+    <ClCompile Include="..\voxeldemo\src\ConversionThread.cpp" />
+    <ClCompile Include="..\voxeldemo\src\Main.cpp" />
+    <ClCompile Include="..\voxeldemo\src\Timer.cpp" />
+    <ClCompile Include="..\voxeldemo\src\Viewer.cpp" />
+    <ClCompile Include="..\voxeldemo\src\VoxelClient_VisDrawer.cxx" />
+    <ClCompile Include="win64\vc10\src\moc_Application.cpp" />
+    <ClCompile Include="win64\vc10\srcd\moc_Application.cpp" />
+    <ClCompile Include="win64\vc10\src\moc_Viewer.cpp" />
+    <ClCompile Include="win64\vc10\srcd\moc_Viewer.cpp" />
+    <ClCompile Include="qdialogmodelproperties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win64\vc10\src\moc_qdialogmodelproperties.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\voxeldemo\inc\ConversionThread.h" />
+    <ClInclude Include="..\voxeldemo\inc\Timer.h" />
+    <ClInclude Include="..\voxeldemo\inc\VoxelClient_VisDrawer.h" />
+    <ClInclude Include="GeneratedFiles\ui_qdialogmodelproperties.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\voxeldemo\inc\Application.h" />
+    <CustomBuild Include="..\voxeldemo\inc\Viewer.h" />
+    <CustomBuild Include="qdialogmodelproperties.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qdialogmodelproperties.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="UI">
+      <UniqueIdentifier>{ed3de886-48a4-47e9-8d96-56b1a47831a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;cxx;c;def</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+  </ItemGroup>
+</Project>

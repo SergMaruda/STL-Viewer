@@ -5,9 +5,9 @@ int main( int argc, char ** argv )
 {
     QApplication a( argc, argv );
 
-    Application *w = new Application();
-    w->setWindowTitle( "Voxel demo-application" );
-    w->show();
+    Application* p_app = new Application();
+    p_app->setWindowTitle( "STL Viewer" );
+    p_app->show();
     a.connect( &a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()) );
     return a.exec();
 }

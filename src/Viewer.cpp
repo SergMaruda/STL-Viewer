@@ -82,7 +82,7 @@ Viewer::~Viewer()
 
 }
 
-void Viewer::paintEvent(QPaintEvent * pEvent)
+void Viewer::paintEvent(QPaintEvent*)
 {
     if (!myView.IsNull())
         myView->Redraw();
@@ -97,7 +97,7 @@ QPaintEngine* Viewer::paintEngine() const
   return 0;
 }
 
-void Viewer::resizeEvent(QResizeEvent * e)
+void Viewer::resizeEvent(QResizeEvent*)
 {
     if (!myView.IsNull())
     {
@@ -118,7 +118,7 @@ void Viewer::mousePressEvent(QMouseEvent * mpEvent)
     if ((mpEvent->modifiers() & Qt::ControlModifier) && (mpEvent->buttons() & Qt::RightButton))
     {
         myView->StartRotation(myStartPnt.x(), myStartPnt.y());
-    }
+	}
 
     // Start degenerate mode
     setDegenerateMode(true);

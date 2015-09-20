@@ -42,7 +42,7 @@ public:
 
   void Render (const Handle(OpenGl_Workspace) &theWorkspace) const;
 
-  virtual void Release (OpenGl_Context* theContext)
+  virtual void Release (OpenGl_Context*)
   {
     //
   }
@@ -2278,7 +2278,7 @@ static void drawROctBoolQuadrangles(Voxel_ROctBoolDS* voxels, const VoxelDirecti
 
 
 static void drawColorQuadrangles(Voxel_ColorDS* voxels, const VoxelDirection vdir, 
-                                 const gp_Dir& viewnormal, const Standard_Boolean nearest,
+                                 const gp_Dir& /*viewnormal*/, const Standard_Boolean nearest,
                                  const Handle(Quantity_HArray1OfColor)& hcolors,
                                  const gp_Pnt& p1, const gp_Pnt& p2, const gp_Pnt& p3, const gp_Pnt& p4,
                                  const Standard_Byte minvalue, const Standard_Byte maxvalue,
@@ -3205,7 +3205,7 @@ void VoxelClient_VisDrawer::DisplayBoxes(const Standard_Boolean nearest)
 }
 
 /**************************************************************************/
-void VoxelClient_VisDrawer::DisplayTriangulation(const Standard_Boolean theHighlight)
+void VoxelClient_VisDrawer::DisplayTriangulation(const Standard_Boolean /*theHighlight*/)
 {
     if(!myData || myData->myTriangulation.IsNull())
         return;
